@@ -1,8 +1,6 @@
 import streamlit as st
-import time
 import random
 
-# Konfigurasi Halaman Konsol ZF-Core
 st.set_page_config(
     page_title="ZF-Core V16.7-PREDATOR | Aa Baroq Applied Technologies",
     page_layout="wide",
@@ -12,16 +10,13 @@ st.set_page_config(
 st.title("⚡ ZF-CORE V16.7-PREDATOR: MASTER CONSOLE")
 st.markdown("*Time-Lock 2326 Active | Unified Geometric Manifold Architecture*")
 
-# Sidebar - Kontrol Parameter & Simulasi Real-Time
 st.sidebar.header("🎛️ Manifold Control Panel")
 selected_pair = st.sidebar.selectbox("Universe Selection (200 Pairs)", ["EUR/USD", "GBP/USD", "AUD/USD", "USD/JPY", "XAU/USD"])
 
-# Parameter Simulasi Sensorik
 zf_score = st.sidebar.slider("ZF-Score Predator", 0.0, 1.0, 0.42, 0.01)
 crx_divergence = st.sidebar.checkbox("CRX Divergence Detected (Topological Mirage)", value=False)
 sacred_pause_active = st.sidebar.toggle("Sacred Pause (Keselarasan Vertikal)", value=False)
 
-# Logika Pengaman Otomatis (Pilar 3 & 4)
 st.sidebar.markdown("---")
 st.sidebar.subheader("🛡️ Automated Shield Status")
 
@@ -43,7 +38,6 @@ else:
 
 st.sidebar.markdown(f"**System State:** <span style='color:{state_color}; font-weight:bold;'>{system_state}</span>", unsafe_allow_html=True)
 
-# Layout Utama Dashboard
 col1, col2, col3 = st.columns(3)
 
 with col1:
@@ -59,8 +53,6 @@ with col3:
     st.metric(label="Execution Authorization", value="REVOKED" if (zf_score > 0.85 or sacred_pause_active or zf_score > 0.99) else "GRANTED")
 
 st.markdown("---")
-
-# Modul Pilar 3: Tiered Execution & Sinyal Aksi
 st.subheader("📊 Tiered Execution & Resonance Re-entry Protocol")
 
 if system_state.startswith("TOPOLOGICAL FRACTURE") or system_state.startswith("SACRED PAUSE") or system_state.startswith("COLD LOGIC"):
@@ -74,7 +66,6 @@ else:
     with t3:
         st.success("**Tier 3 (20% Alokasi)**\nStatus: *Penyempurnaan Klaster*\nAction: Standby")
 
-# Archival Vault & Log Terminal
 st.markdown("---")
 st.subheader("📂 Archival Vault & Live Log-Vault")
 with st.expander("Lihat Log Transmisi Terakhir (Time-Lock 2326)"):
