@@ -1,6 +1,7 @@
 import streamlit as st
 import random
 
+# PERBAIKAN: st.set_page_config HARUS berada di baris perintah Streamlit paling awal
 st.set_page_config(
     page_title="ZF-Core V16.7-PREDATOR | Aa Baroq Applied Technologies",
     page_layout="wide",
