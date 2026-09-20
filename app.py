@@ -1,12 +1,41 @@
 import streamlit as st
 import random
+import sqlite3
+from datetime import datetime
 
-# PERBAIKAN: Gunakan 'layout' alih-alih 'page_layout'
 st.set_page_config(
     page_title="ZF-Core V16.7-PREDATOR | Aa Baroq Applied Technologies",
     layout="wide",
     initial_sidebar_state="expanded"
 )
+
+# Inisialisasi Basis Data SQLite Dinamis
+def init_db():
+    conn = sqlite3.connect('zf_manifold.db')
+    c = conn.cursor()
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS zf_logs (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            timestamp TEXT,
+            asset TEXT,
+            zf_score REAL,
+            system_state TEXT,
+            authorization TEXT
+        )
+    ''')
+    conn.commit()
+    conn.close()
+
+def log_to_db(asset, score, state, auth):
+    conn = sqlite3.connect('zf_manifold.db')
+    c = conn.cursor()
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    c.execute("INSERT INTO zf_logs (timestamp, asset, zf_score, system_state, authorization) VALUES (?, ?, ?, ?, ?)",
+              (timestamp, asset, score, state, auth))
+    conn.commit()
+    conn.close()
+
+init_db()
 
 st.title("⚡ ZF-CORE V16.7-PREDATOR: MASTER CONSOLE")
 st.markdown("*Time-Lock 2326 Active | Unified Geometric Manifold Architecture*")
@@ -39,6 +68,11 @@ else:
 
 st.sidebar.markdown(f"**System State:** <span style='color:{state_color}; font-weight:bold;'>{system_state}</span>", unsafe_allow_html=True)
 
+exec_auth = "REVOKED" if (zf_score > 0.85 or sacred_pause_active or zf_score > 0.99) else "GRANTED"
+
+# Rekam otomatis ke database SQLite
+log_to_db(selected_pair, zf_score, system_state, exec_auth)
+
 col1, col2, col3 = st.columns(3)
 
 with col1:
@@ -51,28 +85,20 @@ with col2:
 
 with col3:
     st.metric(label="Second Derivative (d2P/dt2)", value=f"{random.uniform(-0.02, 0.02):.4f}")
-    st.metric(label="Execution Authorization", value="REVOKED" if (zf_score > 0.85 or sacred_pause_active or zf_score > 0.99) else "GRANTED")
+    st.metric(label="Execution Authorization", value=exec_auth)
 
 st.markdown("---")
 st.subheader("📊 Tiered Execution & Resonance Re-entry Protocol")
 
-if system_state.startswith("TOPOLOGICAL FRACTURE") or system_state.startswith("SACRED PAUSE") or system_state.startswith("COLD LOGIC"):
-    st.error(f"⚠️ EKSEKUSI DITAHAN OLEH SISTEM: Konsol berada dalam status **{system_state}**. Tidak ada alokasi modal yang dilepaskan.")
+if "TOPOLOGICAL FRACTURE" in system_state or "SACRED PAUSE" in system_state or "COLD LOGIC" in system_state:
+    st.error(f"⚠️ EKSEKUSI DITAHAN OLEH SISTEM: Konsol berada dalam status **{system_state}**.")
 else:
     t1, t2, t3 = st.columns(3)
     with t1:
-        st.info("**Tier 1 (30% Alokasi)**\nStatus: *Uji Ketahanan P_pure*\nAction: Standby")
+        st.info("**Tier 1 (30% Alokasi)**\nStatus: *Uji Ketahanan P_pure*")
     with t2:
-        st.warning("**Tier 2 (50% Alokasi)**\nStatus: *Konfirmasi Snap-back*\nAction: Standby")
+        st.warning("**Tier 2 (50% Alokasi)**\nStatus: *Konfirmasi Snap-back*")
     with t3:
-        st.success("**Tier 3 (20% Alokasi)**\nStatus: *Penyempurnaan Klaster*\nAction: Standby")
+        st.success("**Tier 3 (20% Alokasi)**\nStatus: *Penyempurnaan Klaster*")
 
-st.markdown("---")
-st.subheader("📂 Archival Vault & Live Log-Vault")
-with st.expander("Lihat Log Transmisi Terakhir (Time-Lock 2326)"):
-    st.text(f"""
-    [2326-09-20 20:28:19] - WebSocket feed connected to Tier-1 ECN Node.
-    [2326-09-20 20:28:20] - HFT Jitter Filter active: Filtered out 412 micro-transactions.
-    [2326-09-20 20:28:21] - Asset {selected_pair} scanned. ZF-Score: {zf_score}. State: {system_state}.
-    [2326-09-20 20:28:22] - Archival Vault synchronized successfully.
-    """)
+st.success("✅ Transmisi manifold saat ini telah otomatis diarsipkan ke dalam basis data SQLite (`zf_manifold.db`). Pilih menu **Log_Vault** di bilah navigasi samping kiri untuk melihat tabel arsip.")
