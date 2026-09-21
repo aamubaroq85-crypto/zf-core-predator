@@ -1,41 +1,58 @@
-import streamlit as st
-import sqlite3
 import pandas as pd
+import plotly.express as px
+import sqlite3
+import streamlit as st
 
-st.set_page_config(
-    page_title="Archival Log-Vault | ZF-Core V16.7",
-    layout="wide",
-    initial_sidebar_state="expanded"
+st.set_page_config(page_title="Archival Log-Vault", page_icon="📜", layout="wide")
+
+st.title("📜 Archival Log-Vault & Trend Analytics")
+st.markdown(
+    "Pusat penyimpanan arsip transaksi dan visualisasi metrik manifold"
+    " berbasis `zf_manifold.db`."
 )
 
-st.title("📂 Archival Vault & SQLite Log-Explorer")
-st.markdown("*Manifold Historical Persistence Engine | Aa Baroq Applied Technologies*")
 
-def load_logs():
-    conn = sqlite3.connect('zf_manifold.db')
-    df = pd.read_sql_query("SELECT * FROM zf_logs ORDER BY id DESC", conn)
-    conn.close()
-    return df
+# Ambil Data dari SQLite
+@st.cache_data(ttl=5)
+def load_data():
+  conn = sqlite3.connect("zf_manifold.db")
+  df = pd.read_sql_query("SELECT * FROM manifold_logs ORDER BY id DESC", conn)
+  conn.close()
+  return df
 
-try:
-    df_logs = load_logs()
-    
-    col1, col2 = st.columns([2, 1])
-    with col1:
-        st.metric(label="Total Log Records Stored", value=len(df_logs))
-    with col2:
-        if st.button("🗑️ Kosongkan Arsip Basis Data"):
-            conn = sqlite3.connect('zf_manifold.db')
-            conn.execute("DELETE FROM zf_logs")
-            conn.commit()
-            conn.close()
-            st.rerun()
 
-    st.markdown("---")
-    st.subheader("📋 Tabel Riwayat Pemindaian Dinamis")
-    
-    # Menampilkan data dalam bentuk interaktif
-    st.dataframe(df_logs, use_container_width=True)
+df_logs = load_data()
 
-except Exception as e:
-    st.warning("⚠️ Basis data belum terdeteksi. Silakan buka halaman Utama (`app.py`) terlebih dahulu untuk menginisialisasi sistem.")
+if df_logs.empty:
+  st.warning(
+      "⚠️ Belum ada data arsip terekam. Silakan lakukan pencatatan dari halaman"
+      " Master Console (`app.py`)."
+  )
+else:
+  # Tombol Ekspor CSV
+  st.markdown("### 📥 Ekspor Data Arsip")
+  csv_data = df_logs.to_csv(index=False).encode("utf-8")
+  st.download_button(
+      label="📥 Unduh Arsip (Format CSV)",
+      data=csv_data,
+      file_name="zf_manifold_archive.csv",
+      mime="text/csv",
+  )
+
+  st.markdown("---")
+
+  # Visualisasi Grafik Interaktif Plotly
+  st.markdown("### 📈 Grafik Tren Metrik Manifold")
+  fig = px.line(
+      df_logs.sort_values("timestamp"),
+      x="timestamp",
+      y=["zf_score", "topological_drift"],
+      markers=True,
+      title="Fluktuasi ZF-Score & Topological Drift Berdasarkan Waktu",
+      labels={"value": "Nilai Metrik", "timestamp": "Waktu Transmisi"},
+  )
+  st.plotly_chart(fig, use_container_width=True)
+
+  st.markdown("---")
+  st.markdown("### 📋 Tabel Riwayat Basis Data")
+  st.dataframe(df_logs, use_container_width=True)
