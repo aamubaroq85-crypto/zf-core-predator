@@ -2,10 +2,16 @@ import sqlite3
 from datetime import datetime
 import streamlit as st
 
-# Inisialisasi Database SQLite (Menambahkan kolom sinyal Auto Buy/Sell)
+# Inisialisasi Database SQLite dengan Migrasi Otomatis
 def init_db():
   conn = sqlite3.connect("zf_manifold.db")
   cursor = conn.cursor()
+  cursor.execute("PRAGMA table_info(manifold_logs);")
+  columns = [info[1] for info in cursor.fetchall()]
+
+  if columns and "auto_signal" not in columns:
+    cursor.execute("DROP TABLE IF EXISTS manifold_logs;")
+
   cursor.execute("""
         CREATE TABLE IF NOT EXISTS manifold_logs (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -44,7 +50,7 @@ asset = st.sidebar.selectbox(
 )
 zf_score = st.sidebar.slider("ZF-Score Predator", 0.0, 1.0, 0.42)
 
-# Kontrol Pilihan Sesuai Permintaan
+# Kotak Centang & Tombol Sakelar
 crx_divergence = st.sidebar.checkbox(
     "CRX Divergence Detected (Topological Mirage)"
 )
@@ -134,3 +140,15 @@ if st.button("🚀 Catat & Arsipkan Transmisi Manifold"):
       "✅ Transmisi manifold beserta sinyal Auto Buy/Sell berhasil diarsipkan ke"
       " basis data SQLite!"
   )
+
+# --- FITUR FOOTER PROFESIONAL ---
+st.markdown("---")
+st.markdown(
+    """
+    <div style='text-align: center; color: #6c757d; font-size: 0.85em;'>
+        <p><b>ZF-Core V16.7-PREDATOR</b> | Developed under <b>Aa Baroq Applied Technologies</b></p>
+        <p>Secure Manifold Geodesic Distribution &bull; All Rights Reserved &copy; 2026</p>
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
