@@ -7,19 +7,22 @@ st.set_page_config(
     page_title="ZF-Core V16.7-PREDATOR [PREMIUM]", page_icon="🔐", layout="wide"
 )
 
-# Inisialisasi Database SQLite (Tabel Log & Tabel Lisensi)
-
-
+# Inisialisasi Database SQLite & Master Key
 def init_db():
   conn = sqlite3.connect("zf_manifold.db")
   cursor = conn.cursor()
 
-  # Tabel Log Manifold
-  cursor.execute("PRAGMA table_info(manifold_logs);")
-  columns = [info[1] for info in cursor.fetchall()]
-  if columns and "auto_signal" not in columns:
-    cursor.execute("DROP TABLE IF EXISTS manifold_logs;")
+  # Tabel Lisensi Pengguna Premium
+  cursor.execute("""
+        CREATE TABLE IF NOT EXISTS licenses (
+            key TEXT PRIMARY KEY,
+            owner TEXT,
+            tier TEXT,
+            expires_date TEXT
+        )
+    """)
 
+  # Tabel Log Manifold
   cursor.execute("""
         CREATE TABLE IF NOT EXISTS manifold_logs (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -36,17 +39,7 @@ def init_db():
         )
     """)
 
-  # Tabel Lisensi Pengguna Premium
-  cursor.execute("""
-        CREATE TABLE IF NOT EXISTS licenses (
-            key TEXT PRIMARY KEY,
-            owner TEXT,
-            tier TEXT,
-            expires_date TEXT
-        )
-    """)
-
-  # Masukkan Master Key Default untuk Administrator / Pengujian (Contoh: "BAROQ-PREDATOR-2026")
+  # Masukkan Master Key Default
   cursor.execute(
       "INSERT OR IGNORE INTO licenses (key, owner, tier, expires_date) VALUES"
       " (?, ?, ?, ?)",
@@ -64,10 +57,13 @@ init_db()
 def verify_license(key):
   if not key:
     return False, None
+  # Bersihkan spasi berlebih dari input pengguna
+  clean_key = key.strip()
   conn = sqlite3.connect("zf_manifold.db")
   cursor = conn.cursor()
   cursor.execute(
-      "SELECT owner, tier, expires_date FROM licenses WHERE key = ?", (key,)
+      "SELECT owner, tier, expires_date FROM licenses WHERE key = ?",
+      (clean_key,),
   )
   row = cursor.fetchone()
   conn.close()
@@ -88,13 +84,14 @@ if not st.session_state.authenticated:
       " Technologies*"
   )
   st.info(
-      "Aplikasi ini dilindungi oleh protokol lisensi komersial berbayar. Harap"
-      " masukkan *License Key* valid Anda untuk mengakses konsol."
+      "Masukkan *License Key* valid Anda untuk membuka konsol. (Gunakan Master"
+      " Key uji: **BAROQ-PREDATOR-2026**)"
   )
 
   with st.form("license_form"):
+    # Menggunakan tipe teks biasa agar mudah diketik dan terlihat jelas di HP
     entered_key = st.text_input(
-        "Masukkan License Key Premium Anda:", type="password"
+        "Masukkan License Key Premium Anda:", value="BAROQ-PREDATOR-2026"
     )
     submit_button = st.form_submit_button("🔓 Verifikasi & Masuk Konsol")
 
@@ -110,24 +107,11 @@ if not st.session_state.authenticated:
         st.rerun()
       else:
         st.error(
-            "❌ License Key tidak valid atau kedaluwarsa. Hubungi administrator"
-            " Aa Baroq Applied Technologies untuk mendapatkan akses."
+            "❌ License Key tidak valid atau kedaluwarsa. Periksa kembali"
+            " ketikan Anda."
         )
 
-  # Informasi Pembelian Lisensi / Call to Action
-  st.markdown("---")
-  st.markdown("### 💳 Dapatkan Akses Lisensi Premium")
-  st.write(
-      "Ingin mengintegrasikan mesin manifold dan *Auto Buy/Sell* otonom ke"
-      " dalam operasi trading Anda?"
-  )
-  if st.button("🌐 Hubungi Tim Penjualan / Request Key"):
-    st.markdown(
-        "Silakan kirimkan permohonan lisensi komersial Anda langsung melalui"
-        " portal resmi **Aa Baroq Applied Technologies**."
-    )
-
-  st.stop()  # Menghentikan eksekusi kode di bawah jika belum terautentikasi
+  st.stop()
 
 # --- KONSOL UTAMA (Hanya Tampil Jika Sudah Berbayar / Terautentikasi) ---
 st.title("⚡ ZF-CORE V16.7-PREDATOR: MASTER CONSOLE")
@@ -145,7 +129,6 @@ asset = st.sidebar.selectbox(
 )
 zf_score = st.sidebar.slider("ZF-Score Predator", 0.0, 1.0, 0.42)
 
-# Kotak Centang & Tombol Sakelar
 crx_divergence = st.sidebar.checkbox(
     "CRX Divergence Detected (Topological Mirage)"
 )
@@ -163,7 +146,7 @@ else:
   system_state = "LAMINAR STATE (STABLE RESONANCE)"
   st.sidebar.success(f"System State: {system_state}")
 
-# Logika Penentuan Sinyal Auto Buy / Sell
+# Logika Sinyal Auto Buy / Sell
 if sacred_pause:
   auto_signal = "HOLD / STANDBY (Sacred Pause Active)"
   signal_color = "orange"
@@ -180,7 +163,6 @@ else:
   auto_signal = "NEUTRAL / ACCUMULATION"
   signal_color = "blue"
 
-# Parameter metrik otomatis
 topological_drift = 0.0312 if not crx_divergence else 0.0895
 v_pure_lots = 2435 if not sacred_pause else 0
 second_derivative = 0.0010
@@ -207,7 +189,6 @@ st.info(
     "**Tier 3 (20% Alokasi)** Status: *Penyempurnaan Klaster*"
 )
 
-# Tombol Rekam Transmisi ke SQLite
 if st.button("🚀 Catat & Arsipkan Transmisi Manifold"):
   conn = sqlite3.connect("zf_manifold.db")
   cursor = conn.cursor()
@@ -236,13 +217,11 @@ if st.button("🚀 Catat & Arsipkan Transmisi Manifold"):
       " basis data SQLite!"
   )
 
-# Tombol Keluar / Ganti Akun
 if st.sidebar.button("🔒 Keluar (Logout Lisensi)"):
   st.session_state.authenticated = False
   st.session_state.license_info = None
   st.rerun()
 
-# --- FITUR FOOTER PROFESIONAL ---
 st.markdown("---")
 st.markdown(
     """
